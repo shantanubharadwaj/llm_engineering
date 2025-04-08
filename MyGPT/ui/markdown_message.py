@@ -1,5 +1,5 @@
 import markdown
-from PyQt6.QtWidgets import QTextBrowser, QWidget, QVBoxLayout, QFrame, QLabel, QApplication
+from PyQt6.QtWidgets import QTextBrowser, QWidget, QVBoxLayout, QFrame, QLabel, QSizePolicy
 from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtCore import Qt
 
@@ -27,6 +27,17 @@ class MarkdownMessageWidget(QWidget):
             self.message = QLabel(text)
             self.message.setWordWrap(True)
             self.message.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            
+            self.message.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            
+            # Calculate an appropriate width for the message
+            fm = QFontMetrics(self.message.font())
+            text_width = min(fm.horizontalAdvance(text) + 40, 500)  # Cap at 500px
+            
+            # Set a minimum width for the frame based on content
+            self.frame.setMinimumWidth(text_width)
+            # Set maximum width to prevent overly wide messages
+            self.frame.setMaximumWidth(500)
         else:
             # For assistant messages, use QTextBrowser with Markdown rendering
             self.message = QTextBrowser()
@@ -90,22 +101,12 @@ class MarkdownMessageWidget(QWidget):
                 "background-color: #E1F5FE; border-radius: 10px; padding: 10px;"
             )
             self.layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+            self.frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         else:
             self.frame.setStyleSheet(
                 "background-color: #F5F5F5; border-radius: 10px; padding: 10px;"
             )
             self.layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            self.frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         
         self.layout.addWidget(self.frame)
-
-# Now update the ChatWidget's add_message method to use this new widget
-def add_message(self, text, is_user=True):
-    message_widget = MarkdownMessageWidget(text, is_user)
-    self.chat_layout.addWidget(message_widget)
-    # Save to conversation history
-    role = "user" if is_user else "assistant"
-    self.conversation.append({"role": role, "content": text})
-    # Scroll to bottom
-    QApplication.processEvents()  # Force update
-    scrollbar = self.scroll_area.verticalScrollBar()
-    scrollbar.setValue(scrollbar.maximum())
